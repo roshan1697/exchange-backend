@@ -13,7 +13,7 @@ export type MessageToEngine = {
 } | {
     type: typeof CANCEL_ORDER,
     data:{
-        userId:string,
+        orderId:string,
         market:string
     }
 } | {
