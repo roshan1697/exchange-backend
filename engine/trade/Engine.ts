@@ -110,7 +110,7 @@ export class Engine {
                         this.balance.get(order.userId)[quoteAsset]?.locked -= leftQuantity
 
                         if(price){
-                            this.sendUpdateDepthAt(price.toString(), cancelMarket)
+                            this.sendUpdatedDepthAt(price.toString(), cancelMarket)
                         }
                     }
 
@@ -202,7 +202,7 @@ export class Engine {
         const {fills, executedQty} = orderbook.addOrder(order)
 
         this.updateBalance(userId,baseAsset,quoteAsset,side,fills,executedQty)
-        this.createDbtrades(fills,market,userId)
+        this.createDbTrades(fills,market,userId)
         this.updateDbOrders(order,executedQty,fills,market)
         this.publishWsDepthUpdates(fills,price,side,market)
         this.publishWsTrades(fills,userId,market)

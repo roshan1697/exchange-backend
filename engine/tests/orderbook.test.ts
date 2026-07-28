@@ -108,7 +108,7 @@ describe('Self trade prevention',()=>{
     })
 })
 
-describe('Precission errors are taken care of',()=>{
+describe('Precision errors are taken care of',()=>{
     test('Bid doesnt persist even with decimals',()=>{
         const orderbook = new Orderbook('TATA',[{
             price:999,
