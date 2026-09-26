@@ -1,21 +1,30 @@
 import {Router} from 'express'
+import { RedisManager } from '../redismanager'
+import { GET_BALANCE } from '../types'
 
 export const balanceRouter = Router()
 
 balanceRouter.get('/',async(req,res)=>{
     try {
-        const userId = "test-user-123"; 
+        const userId = req.query.userId as string
+
+        if(!userId){
+            return res.status(400).json({ success: false, error: "'userId' query param is required" })
+        }
 
     
-        const balances = {
-            USD: { available: 15000.00, locked: 500.00 },
-            BTC: { available: 1.25, locked: 0.1 }
-        };
+        const response = await RedisManager.getInstance().sendAndAwait({
+            type: GET_BALANCE,
+            data: { userId }
+        })
 
-        
+        if(response.type === 'ERROR'){
+            return res.status(400).json({ success: false, error: response.payload.message })
+        }
+
         res.status(200).json({
             success: true,
-            balances
+            balances: response.payload
         });
     } catch (error) {
         console.error("[Balances API Error]:", error);

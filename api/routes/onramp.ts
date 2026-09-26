@@ -1,4 +1,6 @@
 import { Router } from "express";
+import { RedisManager } from "../redismanager";
+import { ON_RAMP } from "../types";
 
 export const onRampRouter = Router()
 
@@ -8,14 +10,14 @@ const userBalances: Record<string, { INR: { available: number; locked: number } 
 
 interface OnRampRequestBody {
     userId: string;
-    amount: number;      
-    txnId?: string;       
+    amount: number;
+    txnId?: string;
 }
 
 
-onRampRouter.post('/inr',async(req,res)=>{
+onRampRouter.post('/inr', async (req, res) => {
     try {
-        const { userId, amount, txnId } = req.body;
+        const { userId, amount, txnId }: OnRampRequestBody = req.body;
 
         if (!userId || typeof amount !== 'number' || amount <= 0) {
             return res.status(400).json({
@@ -31,15 +33,20 @@ onRampRouter.post('/inr',async(req,res)=>{
             });
         }
 
-        
-        if (!userBalances[userId]) {
-            userBalances[userId] = { INR: { available: 0, locked: 0 } };
+
+        const response = await RedisManager.getInstance().sendAndAwait({
+            type: ON_RAMP,
+            data: {
+                userId,
+                amount: amount.toString(),
+                txnId: txnId || `txn_${Date.now()}`
+            }
+        })
+
+        if (response.type === 'ERROR') {
+            return res.status(400).json({ success: false, error: response.payload.message })
         }
 
-        
-        userBalances[userId].INR.available += amount;
-
-        
         res.status(200).json({
             success: true,
             message: `Successfully on-ramped ₹${amount.toLocaleString('en-IN')}`,
@@ -47,7 +54,7 @@ onRampRouter.post('/inr',async(req,res)=>{
                 userId,
                 creditedAmount: amount,
                 txnId: txnId || `txn_${Date.now()}`,
-                balance: userBalances[userId].INR
+                balance: response.type === 'BALANCE' ? response.payload: undefined
             }
         });
     } catch (error) {

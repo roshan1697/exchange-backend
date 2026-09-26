@@ -17,7 +17,9 @@ export const klineRouter = Router()
 
 klineRouter.get('/', async(req,res)=>{
     const { market, interval, startTime, endTime } = req.query;
-
+    if(!market || !startTime || !endTime){
+        return res.status(400).send('market, startTime and endTime are required')
+    }
     let query;
     switch (interval) {
         case '1m':

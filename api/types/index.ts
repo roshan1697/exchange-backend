@@ -3,6 +3,8 @@ export const CANCEL_ORDER = 'CANCEL_ORDER'
 export const ON_RAMP = 'ON_RAMP'
 export const GET_OPEN_ORDERS = 'GET_OPEN_ORDER'
 export const GET_DEPTH = 'GET_DEPTH'
+export const GET_BALANCE = 'GET_BALANCE'
+
 
 export type MessageFromOderBook = {
     type:'DEPTH',
@@ -40,4 +42,10 @@ export type MessageFromOderBook = {
         side: 'buy' | 'sell',
         userId:string
     }[]
+}| {
+    type: 'BALANCE',
+    payload: Record<string, { available:number, locked:number }>
+} | {
+    type: 'ERROR',
+    payload: { message: string }
 }
