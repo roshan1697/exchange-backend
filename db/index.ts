@@ -10,16 +10,33 @@ const client = new Client({
     port: 5432,
 })
 
-client.connect()
 
 const main = async() => {
-    const redisClient = createClient()
+    await client.connect()
+    console.log('db processor connected to Postgres')
+
+    const redisClient = createClient({ url: process.env.REDIS_URL })
+    redisClient.on('error', (err) => console.log('Redis client error', err))
     await redisClient.connect()
 
-    while(true) {
-        const response = await redisClient.rPop('db_processor' as string)
-        if(!response){
+    console.log('db processor is listening on the "db_processor" queue')
 
+    let shuttingDown = false
+    const shutdown = async () => {
+        if (shuttingDown) return
+        shuttingDown = true
+        await redisClient.quit()
+        await client.end()
+        process.exit(0)
+    }
+    process.on('SIGINT', shutdown)
+    process.on('SIGTERM', shutdown)
+
+    while(!shuttingDown) {
+        try {
+            const response = await redisClient.rPop('db_processor' as string)
+        if(!response){
+            continue
         }
         else {
             const data:DbMessage = JSON.parse(response)
@@ -34,6 +51,16 @@ const main = async() => {
                 await client.query(query,values)
             }
         }
+        } catch (error) {
+            console.log('Error while processing db_processor message', error)
+
+        }
+    
     }
 
 }
+
+main().catch((error) => {
+    console.log('Fatal error in db processor', error)
+    process.exit(1)
+})
