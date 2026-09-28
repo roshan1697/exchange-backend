@@ -15,7 +15,7 @@ export interface Fill {
     qty:number
     tradeId:number
     otherUserId:string
-    markerOrderId:string
+    marketOrderId:string
 }
 
 export class Orderbook {
@@ -62,7 +62,7 @@ export class Orderbook {
                     fills
                 }
             }
-            this.bids.push(order)
+            this.insertBid(order)
             return {
                 executedQty,
                 fills
@@ -77,7 +77,7 @@ export class Orderbook {
                     fills
                 }
             }
-            this.asks.push(order)
+            this.insertAsk(order)
             return{
                 executedQty,fills
             }
@@ -98,7 +98,7 @@ export class Orderbook {
                     qty:filledQty,
                     tradeId: this.lastTradeId,
                     otherUserId:this.asks[i]!.userId,
-                    markerOrderId:this.asks[i]!.orderId
+                    marketOrderId:this.asks[i]!.orderId
 
                 })
             }
@@ -130,7 +130,7 @@ export class Orderbook {
                     qty:amountRemaining,
                     tradeId:this.lastTradeId,
                     otherUserId:this.bids[i]!.userId,
-                    markerOrderId:this.bids[i]!.orderId
+                    marketOrderId:this.bids[i]!.orderId
                 })
             }
         }
@@ -145,6 +145,23 @@ export class Orderbook {
         }
     }
 
+    private insertBid(order:Order) {
+        const index = this.bids.findIndex(b => b.price < order.price)
+        if(index === -1){
+            this.bids.push(order)
+        } else {
+            this.bids.splice(index,0,order)
+        }
+    }
+
+    private insertAsk(order:Order) {
+        const index = this.asks.findIndex(a => a.price > order.price)
+        if(index === -1){
+            this.asks.push(order)
+        } else {
+            this.asks.splice(index,0,order)
+        }
+    }
     getDepth() {
         const bids: [string, string][] = []
         const asks: [string,string][] = []

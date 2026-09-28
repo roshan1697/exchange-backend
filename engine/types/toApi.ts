@@ -7,7 +7,7 @@ export const ON_RAMP = 'ON_RAMP'
 
 export const GET_DEPTH = 'GET_DEPTH'
 
-export type MessageToApi = {
+export type MessageToApi =  {
     type:'DEPTH',
     payload:{
         bids:[string, string][],
@@ -24,15 +24,21 @@ export type MessageToApi = {
             qty:number,
             tradeId:number
         }[]
-    } | {
-        type:'ORDER_CANCElLED',
-        payload:{
-            orderId: string,
-            executedQty:number,
-            remainingQty:number,
-        }
-    } | {
-        type: 'OPEN_ORDER',
-        payload: Order[]
     }
+} | {
+    type:'ORDER_CANCELLED',
+    payload:{
+        orderId: string,
+        executedQty:number,
+        remainingQty:number,
+    }
+} | {
+    type: 'OPEN_ORDER',
+    payload: Order[]
+} | {
+    type: 'BALANCE',
+    payload: Record<string, { available:number, locked:number }>
+} | {
+    type: 'ERROR',
+    payload: { message: string }
 }
