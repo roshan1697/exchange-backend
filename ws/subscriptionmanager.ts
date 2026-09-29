@@ -10,13 +10,15 @@ export class SubscriptionManager {
 
     private constructor() {
         this.redisClient = createClient()
+        this.redisClient.on('error', (err) => console.log('Redis client error', err))
+
         this.redisClient.connect()
     }
 
     public static getInstance() {
         if (!this.instance) {
             this.instance = new SubscriptionManager()
-            
+
         }
         return this.instance
     }
@@ -55,8 +57,14 @@ export class SubscriptionManager {
     }
 
     private redisCallbackHandler = (message: string, channel: string) => {
-        const parsedMessage = JSON.parse(message);
-        this.reverseSubscriptions.get(channel)?.forEach(s => UserManager.getInstance().getUser(s)?.emit(parsedMessage));
+        try {
+            const parsedMessage = JSON.parse(message);
+            this.reverseSubscriptions.get(channel)?.forEach(s => UserManager.getInstance().getUser(s)?.emit(parsedMessage));
+        } catch (error) {
+            console.log('Ignoring malformed message on channel', channel, error)
+
+        }
+
     }
 
     getSubscriptions(userId: string) {
